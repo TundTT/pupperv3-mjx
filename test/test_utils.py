@@ -12,35 +12,35 @@ from pupperv3_mjx.utils import (
 
 def test_relu():
     fn = activation_fn_map("relu")
-    input_val = jp.array([-1.0, 0.0, 1.0])
-    expected_output = jp.array([0.0, 0.0, 1.0])
+    input_val = jp.array([-1.0, 0.0, 1.0], dtype=jp.float64)
+    expected_output = jp.array([0.0, 0.0, 1.0], dtype=jp.float64)
     np.testing.assert_array_equal(fn(input_val), expected_output)
 
 
 def test_sigmoid():
     fn = activation_fn_map("sigmoid")
-    input_val = jp.array([-1.0, 0.0, 1.0])
+    input_val = jp.array([-1.0, 0.0, 1.0], dtype=jp.float64)
     expected_output = 1 / (1 + jp.exp(-input_val))
     np.testing.assert_array_almost_equal(fn(input_val), expected_output)
 
 
 def test_elu():
     fn = activation_fn_map("elu")
-    input_val = jp.array([-1.0, 0.0, 1.0])
+    input_val = jp.array([-1.0, 0.0, 1.0], dtype=jp.float64)
     expected_output = jax.nn.elu(input_val)
     np.testing.assert_array_almost_equal(fn(input_val), expected_output)
 
 
 def test_tanh():
     fn = activation_fn_map("tanh")
-    input_val = jp.array([-1.0, 0.0, 1.0])
+    input_val = jp.array([-1.0, 0.0, 1.0], dtype=jp.float64)
     expected_output = jp.tanh(input_val)
     np.testing.assert_array_almost_equal(fn(input_val), expected_output)
 
 
 def test_softmax():
     fn = activation_fn_map("softmax")
-    input_val = jp.array([1.0, 2.0, 3.0])
+    input_val = jp.array([1.0, 2.0, 3.0], dtype=jp.float64)
     expected_output = jax.nn.softmax(input_val)
     np.testing.assert_array_almost_equal(fn(input_val), expected_output)
 
@@ -51,17 +51,17 @@ def test_invalid_activation():
 
 
 def test_circular_buffer_push_back():
-    buffer = jp.array([[1, 2, 3], [4, 5, 6]])
-    new_value = jp.array([7, 8])
-    expected_output = jp.array([[2, 3, 7], [5, 6, 8]])
+    buffer = jp.array([[1, 2, 3], [4, 5, 6]], dtype=jp.float64)
+    new_value = jp.array([7, 8], dtype=jp.float64)
+    expected_output = jp.array([[2, 3, 7], [5, 6, 8]], dtype=jp.float64)
     output = circular_buffer_push_back(buffer, new_value)
     np.testing.assert_array_equal(output, expected_output)
 
 
 def test_circular_buffer_push_front():
-    buffer = jp.array([[1, 2, 3], [4, 5, 6]])
-    new_value = jp.array([7, 8])
-    expected_output = jp.array([[7, 1, 2], [8, 4, 5]])
+    buffer = jp.array([[1, 2, 3], [4, 5, 6]], dtype=jp.float64)
+    new_value = jp.array([7, 8], dtype=jp.float64)
+    expected_output = jp.array([[7, 1, 2], [8, 4, 5]], dtype=jp.float64)
     output = circular_buffer_push_front(buffer, new_value)
     np.testing.assert_array_equal(output, expected_output)
 

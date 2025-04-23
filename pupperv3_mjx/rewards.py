@@ -4,6 +4,9 @@ from brax.base import Motion, Transform
 from brax import base, math
 import numpy as np
 
+# Set default dtype to float64
+jax.config.update('jax_enable_x64', True)
+
 EPS = 1e-6
 # ------------ reward functions----------------
 def reward_lin_vel_z(xd: Motion) -> jax.Array:
