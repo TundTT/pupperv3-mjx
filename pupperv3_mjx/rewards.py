@@ -4,16 +4,16 @@ from brax.base import Motion, Transform
 from brax import base, math
 import numpy as np
 
-
+EPS = 1e-6
 # ------------ reward functions----------------
 def reward_lin_vel_z(xd: Motion) -> jax.Array:
     # Penalize z axis base linear velocity
-    return jp.square(xd.vel[0, 2])
+    return jp.clip(jp.square(xd.vel[0, 2]), -1000.0, 1000.0)
 
 
 def reward_ang_vel_xy(xd: Motion) -> jax.Array:
     # Penalize xy axes base angular velocity
-    return jp.sum(jp.square(xd.ang[0, :2]))
+    return jp.clip(jp.sum(jp.square(xd.ang[0, :2])), -1000.0, 1000.0)
 
 
 def reward_tracking_orientation(
@@ -23,14 +23,14 @@ def reward_tracking_orientation(
     world_z = jp.array([0.0, 0.0, 1.0])
     world_z_in_body_frame = math.rotate(world_z, math.quat_inv(x.rot[0]))
     error = jp.sum(jp.square(world_z_in_body_frame - desired_world_z_in_body_frame))
-    return jp.exp(-error / tracking_sigma)
+    return jp.clip(jp.exp(-error / (tracking_sigma + EPS)), -1000.0, 1000.0)
 
 
 def reward_orientation(x: Transform) -> jax.Array:
     # Penalize non flat base orientation
     up = jp.array([0.0, 0.0, 1.0])
     rot_up = math.rotate(up, x.rot[0])
-    return jp.sum(jp.square(rot_up[:2]))
+    return jp.clip(jp.sum(jp.square(rot_up[:2])), -1000.0, 1000.0)
 
 
 def reward_torques(torques: jax.Array) -> jax.Array:
@@ -38,23 +38,23 @@ def reward_torques(torques: jax.Array) -> jax.Array:
     # This has a sparifying effect
     # return jp.sqrt(jp.sum(jp.square(torques))) + jp.sum(jp.abs(torques))
     # Use regular sum-squares like in LeggedGym
-    return jp.sum(jp.square(torques))
+    return jp.clip(jp.sum(jp.square(torques)), -1000.0, 1000.0)
 
 
 def reward_joint_acceleration(
     joint_vel: jax.Array, last_joint_vel: jax.Array, dt: float
 ) -> jax.Array:
-    return jp.sum(jp.square((joint_vel - last_joint_vel) / dt))
+    return jp.clip(jp.sum(jp.square((joint_vel - last_joint_vel) / (dt + EPS))), -1000.0, 1000.0)
 
 
 def reward_mechanical_work(torques: jax.Array, velocities: jax.Array) -> jax.Array:
     # Penalize mechanical work
-    return jp.sum(jp.abs(torques * velocities))
+    return jp.clip(jp.sum(jp.abs(torques * velocities)), -1000.0, 1000.0)
 
 
 def reward_action_rate(act: jax.Array, last_act: jax.Array) -> jax.Array:
     # Penalize changes in actions
-    return jp.sum(jp.square(act - last_act))
+    return jp.clip(jp.sum(jp.square(act - last_act)), -1000.0, 1000.0)
 
 
 def reward_tracking_lin_vel(
@@ -63,8 +63,8 @@ def reward_tracking_lin_vel(
     # Tracking of linear velocity commands (xy axes)
     local_vel = math.rotate(xd.vel[0], math.quat_inv(x.rot[0]))
     lin_vel_error = jp.sum(jp.square(commands[:2] - local_vel[:2]))
-    lin_vel_reward = jp.exp(-lin_vel_error / tracking_sigma)
-    return lin_vel_reward
+    lin_vel_reward = jp.exp(-lin_vel_error / (tracking_sigma + EPS))
+    return jp.clip(lin_vel_reward, -1000.0, 1000.0)
 
 
 def reward_tracking_ang_vel(
@@ -73,7 +73,7 @@ def reward_tracking_ang_vel(
     # Tracking of angular velocity commands (yaw)
     base_ang_vel = math.rotate(xd.ang[0], math.quat_inv(x.rot[0]))
     ang_vel_error = jp.square(commands[2] - base_ang_vel[2])
-    return jp.exp(-ang_vel_error / tracking_sigma)
+    return jp.clip(jp.exp(-ang_vel_error / (tracking_sigma + EPS)), -1000.0, 1000.0)
 
 
 def reward_feet_air_time(
@@ -85,14 +85,14 @@ def reward_feet_air_time(
     # Reward air time.
     rew_air_time = jp.sum((air_time - minimum_airtime) * first_contact)
     rew_air_time *= math.normalize(commands[:3])[1] > 0.05  # no reward for zero command
-    return rew_air_time
+    return jp.clip(rew_air_time, -1000.0, 1000.0)
 
 
 def reward_abduction_angle(
     joint_angles: jax.Array, desired_abduction_angles: jax.Array = jp.zeros(4)
 ):
     # Penalize abduction angle
-    return jp.sum(jp.square(joint_angles[1::3] - desired_abduction_angles))
+    return jp.clip(jp.sum(jp.square(joint_angles[1::3] - desired_abduction_angles)), -1000.0, 1000.0)
 
 
 def reward_stand_still(
@@ -111,8 +111,12 @@ def reward_stand_still(
     """
 
     # Penalize motion at zero commands
-    return jp.sum(jp.abs(joint_angles - default_pose)) * (
-        math.normalize(commands[:3])[1] < command_threshold
+    return jp.clip(
+        jp.sum(jp.abs(joint_angles - default_pose)) * (
+            math.normalize(commands[:3])[1] < command_threshold
+        ),
+        -1000.0,
+        1000.0
     )
 
 
@@ -131,7 +135,11 @@ def reward_foot_slip(
     foot_indices = lower_leg_body_id - 1  # we got rid of the world body
     foot_vel = offset.vmap().do(pipeline_state.xd.take(foot_indices)).vel
     # Penalize large feet velocity for feet that are in contact with the ground.
-    return jp.sum(jp.square(foot_vel[:, :2]) * contact_filt.reshape((-1, 1)))
+    return jp.clip(
+        jp.sum(jp.square(foot_vel[:, :2]) * contact_filt.reshape((-1, 1))),
+        -1000.0,
+        1000.0
+    )
 
 
 def reward_termination(done: jax.Array, step: jax.Array, step_threshold: int) -> jax.Array:
@@ -145,4 +153,4 @@ def reward_geom_collision(pipeline_state: base.State, geom_ids: np.array) -> jax
             ((pipeline_state.contact.geom1 == id) | (pipeline_state.contact.geom2 == id))
             * (pipeline_state.contact.dist < 0.0)
         )
-    return contact
+    return jp.clip(contact, -1000.0, 1000.0)

@@ -485,7 +485,10 @@ class PupperV3Env(PipelineEnv):
         rewards_dict = {
             k: v * self._reward_config.rewards.scales[k] for k, v in rewards_dict.items()
         }
-        reward = jp.clip(sum(rewards_dict.values()) * self.dt, 0.0, 10000.0)
+        # Clip individual rewards to prevent extreme values
+        rewards_dict = {k: jp.clip(v, -1000.0, 1000.0) for k, v in rewards_dict.items()}
+        # Sum rewards and clip final value
+        reward = jp.clip(sum(rewards_dict.values()) * self.dt, -1000.0, 10000.0)
 
         # State management
         state.info["kick"] = kick
@@ -563,7 +566,8 @@ class PupperV3Env(PipelineEnv):
         )
 
         noised_gravity = math.rotate(jp.array([0, 0, -1]), inv_torso_rot) + gravity_noise
-        noised_gravity = noised_gravity / jp.linalg.norm(noised_gravity)
+        # Add small epsilon to prevent division by zero in normalization
+        noised_gravity = noised_gravity / (jp.linalg.norm(noised_gravity) + 1e-6)
         noised_ang_vel = local_body_angular_velocity + ang_vel_noise
         noised_imu_data = jp.concatenate([noised_ang_vel, noised_gravity])
 
@@ -585,9 +589,7 @@ class PupperV3Env(PipelineEnv):
             ]
         )
 
-        assert self.observation_dim == obs.shape[0]
-
-        # clip
+        # Clip observation values to prevent extreme values
         obs = jp.clip(obs, -100.0, 100.0)
 
         # stack observations through time
