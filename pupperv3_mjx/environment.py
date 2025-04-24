@@ -5,6 +5,7 @@ from brax import base, math
 from brax.envs.base import PipelineEnv, State
 from brax.io import mjcf
 from jax import numpy as jp
+from typing import *
 
 from pupperv3_mjx import domain_randomization, rewards, utils
 
