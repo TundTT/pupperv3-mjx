@@ -487,7 +487,7 @@ class PupperV3Env(PipelineEnv):
         # Clip individual rewards to prevent extreme values
         rewards_dict = {k: jp.clip(v, -1000.0, 1000.0) for k, v in rewards_dict.items()}
         # Sum rewards and clip final value
-        reward = jp.clip(sum(rewards_dict.values()) * self.dt, -1000.0, 10000.0)
+        reward = jp.clip(sum(rewards_dict.values()) * self.dt, 0.0, 10000.0)
 
         # State management
         state.info["kick"] = kick
