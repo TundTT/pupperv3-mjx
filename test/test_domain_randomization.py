@@ -19,10 +19,10 @@ def test_randomize_qpos():
     rng = jax.random.PRNGKey(0)
 
     qpos = domain_randomization.randomize_qpos(
-        jp.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=jp.float64), start_position_config, rng
+        jp.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=jp.float32), start_position_config, rng
     )
 
-    expected_qpos = jp.array([-0.184, 0.165, 0.278, 0.709, 0.0, 0.0, 0.705, 7.0, 8.0, 9.0, 10.0], dtype=jp.float64)
+    expected_qpos = jp.array([-0.184, 0.165, 0.278, 0.709, 0.0, 0.0, 0.705, 7.0, 8.0, 9.0, 10.0], dtype=jp.float32)
 
     assert jp.isclose(
         qpos, expected_qpos, atol=1e-3

@@ -6,9 +6,6 @@ from brax.envs.base import PipelineEnv, State
 from brax.io import mjcf
 from jax import numpy as jp
 
-# Set default dtype to float64
-jax.config.update('jax_enable_x64', True)
-
 from pupperv3_mjx import domain_randomization, rewards, utils
 
 # More legible printing from numpy.

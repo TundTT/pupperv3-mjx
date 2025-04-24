@@ -3,9 +3,6 @@ from dataclasses import dataclass
 from jax import numpy as jp
 from typing import Tuple
 
-# Set default dtype to float64
-jax.config.update('jax_enable_x64', True)
-
 
 def domain_randomize(
     sys,
