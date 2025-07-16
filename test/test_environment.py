@@ -6,6 +6,7 @@ import pytest
 from pupperv3_mjx import environment, domain_randomization, config, obstacles
 import jax
 from jax import numpy as jp
+import numpy as np
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import mediapy as media
@@ -44,6 +45,12 @@ def setup_environment():
     sys = mjcf.load(ORIGINAL_MODEL_PATH.as_posix())
     JOINT_UPPER_LIMITS = sys.jnt_range[1:, 1]
     JOINT_LOWER_LIMITS = sys.jnt_range[1:, 0]
+    
+    # Set wheel joints (indices 2, 5, 8, 11) to have infinite limits for free rotation
+    wheel_indices = [2, 5, 8, 11]
+    for idx in wheel_indices:
+        JOINT_LOWER_LIMITS = JOINT_LOWER_LIMITS.at[idx].set(-np.inf)
+        JOINT_UPPER_LIMITS = JOINT_UPPER_LIMITS.at[idx].set(np.inf)
     DEFAULT_POSE = jp.array(
         [0.26, 0.0, -0.52, -0.26, 0.0, 0.52, 0.26, 0.0, -0.52, -0.26, 0.0, 0.52]
     )
