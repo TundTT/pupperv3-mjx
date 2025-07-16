@@ -7,7 +7,8 @@ from brax.io import mjcf
 from jax import numpy as jp
 from typing import *
 
-from pupperv3_mjx import domain_randomization, rewards, utils
+from pupperv3_mjx import domain_randomization, utils
+from pupperv3_mjx import rewards_test_k as rewards
 
 # More legible printing from numpy.
 np.set_printoptions(precision=3, suppress=True, linewidth=100)
