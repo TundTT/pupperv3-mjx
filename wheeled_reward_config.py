@@ -50,3 +50,5 @@ reward_config.rewards.scales.knee_collision = 0       # No knees
 
 # Tracking reward parameters
 reward_config.rewards.tracking_sigma = 0.25
+
+#main branch
