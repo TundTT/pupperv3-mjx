@@ -43,30 +43,30 @@ class PupperV3Env(PipelineEnv):
         joint_lower_limits: List = [
             -1.220,
             -0.420,
-            -2.790,
+            -1e6,    # Wheel joint - unlimited rotation
             -2.510,
             -3.140,
-            -0.710,
+            -1e6,    # Wheel joint - unlimited rotation
             -1.220,
             -0.420,
-            -2.790,
+            -1e6,    # Wheel joint - unlimited rotation
             -2.510,
             -3.140,
-            -0.710,
+            -1e6,    # Wheel joint - unlimited rotation
         ],
         joint_upper_limits: List = [
             2.510,
             3.140,
-            0.710,
+            1e6,     # Wheel joint - unlimited rotation
             1.220,
             0.420,
-            2.790,
+            1e6,     # Wheel joint - unlimited rotation
             2.510,
             3.140,
-            0.710,
+            1e6,     # Wheel joint - unlimited rotation
             1.220,
             0.420,
-            2.790,
+            1e6,     # Wheel joint - unlimited rotation
         ],
         dof_damping: float = 0.25,
         position_control_kp: float = 5.0,
@@ -414,8 +414,13 @@ class PupperV3Env(PipelineEnv):
         done = jp.dot(math.rotate(up, x.rot[self._torso_idx - 1]), up) < np.cos(
             self._terminal_body_angle
         )
-        done |= jp.any(joint_angles < self.lowers)
-        done |= jp.any(joint_angles > self.uppers)
+        # Only check joint limits for non-wheel joints (exclude indices 2, 5, 8, 11)
+        non_wheel_indices = jp.array([0, 1, 3, 4, 6, 7, 9, 10])  # Exclude wheel joints
+        non_wheel_joint_angles = joint_angles[non_wheel_indices]
+        non_wheel_lowers = jp.array(self.lowers)[non_wheel_indices]
+        non_wheel_uppers = jp.array(self.uppers)[non_wheel_indices]
+        done |= jp.any(non_wheel_joint_angles < non_wheel_lowers)
+        done |= jp.any(non_wheel_joint_angles > non_wheel_uppers)
         done |= pipeline_state.x.pos[self._torso_idx - 1, 2] < self._terminal_body_z
 
         # Reward
